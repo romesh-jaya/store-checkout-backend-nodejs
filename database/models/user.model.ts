@@ -27,7 +27,7 @@ export default function (sequelize: Sequelize): typeof UserModel {
       },
       password_hash: {
         allowNull: false,
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
       },
       is_admin: {
         allowNull: false,

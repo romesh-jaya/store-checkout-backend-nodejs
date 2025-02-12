@@ -1,8 +1,7 @@
 {
   "env": {
     "DB_CONN_STRING": "postgres://postgres:123@localhost:5432/store_checkout",
-    "HASHSECRET": "fgdfgdfgldfkgjkeer54245465ykdfglkdfglkjdfkgtjl5655465ybgkjcdlgk",
-    "REFRESHSECRET": "4345dgfcbnbgjy8u67856745354fvdbfgfhyhui67867785745tdfbgcvgb",
+    "HASHSECRET": "sdfsdf",
     "ADMINUSER": "admin@ad.com",
     "STARTPORT": 3000,
     "TOKENEXPIRATION": "1h",

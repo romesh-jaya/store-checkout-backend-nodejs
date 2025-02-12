@@ -1,11 +1,12 @@
 // ----------------------------------------------------------------------
 
 import { DB, sequelize } from './database';
+import { logError, logInfo } from './utils/logger';
 
 // Run this first to provide the required config to other library imports
 if (process.env.NODE_ENV === 'production') {
   const dotenv = require('dotenv');
-  console.log('Loading dotenv variables');
+  logInfo('Loading dotenv variables');
   dotenv.config();
 }
 // ----------------------------------------------------------------------
@@ -42,19 +43,19 @@ app.use('/api/v1', clientRoutes);
 DB.sequelize
   .authenticate()
   .then(async () => {
-    console.log(`Database connected successfully!`);
+    logInfo(`Database connected successfully!`);
     app.listen(port, function () {
-      console.log(`App is listening on port ${port} !`);
+      logInfo(`App is listening on port ${port} !`);
     });
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('Sequelize synchronizing models started.');
-      await sequelize.sync({ force: true });
-      console.log('All models were synchronized successfully.');
+      logInfo('Sequelize synchronizing models started.');
+      await sequelize.sync({ alter: true });
+      logInfo('All models were synchronized successfully.');
     }
   })
   .catch((error) => {
-    console.log('Unable to connect to the database:', error);
+    logError('Unable to connect to the database:' + error);
   });
 
 module.exports = app;
