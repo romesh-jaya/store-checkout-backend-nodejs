@@ -1,2 +1,2 @@
 @echo off
-call npm run start:server
+call npm run dev
