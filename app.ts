@@ -12,6 +12,7 @@ if (process.env.NODE_ENV === 'production') {
 // ----------------------------------------------------------------------
 
 const express = require('express');
+const morgan = require('morgan');
 const clientRoutes = require('./routes/v1');
 
 const app = express();
@@ -38,6 +39,7 @@ app.get('/', function (_, res) {
   res.send('Node server is up.');
 });
 
+app.use(morgan('dev', { immediate: true }));
 app.use('/api/v1', clientRoutes);
 
 DB.sequelize
