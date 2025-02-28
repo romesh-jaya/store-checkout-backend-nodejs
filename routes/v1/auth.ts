@@ -137,21 +137,23 @@ router.get('/me', checkAuth, (req: JWTRequest, res) => {
 });
 
 router.get('', checkSuper, (_, res) => {
-  UserModel.findAll()
+  UserModel.findAll({
+    where: {
+      status: constants.USER_STATUS_ACTIVE,
+      email: {
+        [Op.not]: process.env.ADMINUSER,
+      },
+    },
+  })
     .then((documents) => {
       let retArray: { _id: number; email: string; isAdmin: boolean }[] = [];
 
       //prevent sending passwords
-      documents.forEach((document) => {
-        if (document.email != process.env.ADMINUSER) {
-          //Don't pass the admin user to the client, as we cannot change any settings related to this
-          retArray.push({
-            _id: document.id,
-            email: document.email,
-            isAdmin: document.is_admin,
-          });
-        }
-      });
+      retArray = documents.map((document) => ({
+        _id: document.id,
+        email: document.email,
+        isAdmin: document.is_admin,
+      }));
 
       res.status(200).json(retArray);
     })
