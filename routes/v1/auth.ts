@@ -188,4 +188,27 @@ router.delete('/:id', checkSuper, (req, res) => {
     });
 });
 
+router.patch('/:id', checkSuper, (req, res) => {
+  UserModel.update(
+    { is_admin: req.body.isAdmin },
+    {
+      where: {
+        id: req.params.id,
+      },
+    }
+  )
+    .then((result) => {
+      if (result[0] > 0) {
+        res.status(200).json({ message: 'user updated!' });
+      } else {
+        res.status(404).json({ message: 'User not found' });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({
+        message: 'Updating user failed: ' + error.message,
+      });
+    });
+});
+
 module.exports = router;
