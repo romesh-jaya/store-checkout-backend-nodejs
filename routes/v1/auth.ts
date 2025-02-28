@@ -19,7 +19,7 @@ router.post('/signup', (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    res.status(500).json({
+    return res.status(500).json({
       message: 'Missing body params email and password',
     });
   }
@@ -209,6 +209,66 @@ router.patch('/:id', checkSuper, (req, res) => {
         message: 'Updating user failed: ' + error.message,
       });
     });
+});
+
+router.post('/change-password', checkAuth, (req, res) => {
+  const { oldPassword, password } = req.body;
+
+  if (!oldPassword || !password) {
+    return res.status(500).json({
+      message: 'Missing body params oldPassword and password',
+    });
+  }
+
+  UserModel.findOne({
+    where: {
+      id: req.auth.id,
+    },
+  }).then((fetchedUser) => {
+    if (!fetchedUser) {
+      return res
+        .status(401)
+        .json({ message: 'Logged in User cannot be found in database!' });
+    }
+
+    bcryptjs.compare(
+      req.body.oldPassword,
+      fetchedUser.password_hash,
+      function (err, isMatch) {
+        if (err) {
+          return res
+            .status(401)
+            .json({ message: 'Error in comparing passwords!' });
+        }
+        if (!isMatch) {
+          return res
+            .status(401)
+            .json({ message: 'Entered current password is incorrect!' });
+        }
+
+        bcryptjs.hash(req.body.password, 10).then((hash) => {
+          UserModel.update(
+            { password_hash: hash },
+            {
+              where: {
+                id: req.auth.id,
+              },
+            }
+          )
+            .then(() => {
+              return res.status(201).json({
+                message: 'Password changed. Please re-login!',
+              });
+            })
+            .catch((error) => {
+              return res.status(500).json({
+                message: 'Changing password failed: ' + error.message,
+              });
+            });
+        });
+      }
+    );
+  });
 });
 
 module.exports = router;
