@@ -1,10 +1,12 @@
 import { Sequelize, DataTypes, Model } from 'sequelize';
+import * as constants from '../../constants';
 
 export class UserModel extends Model {
   public id!: number;
   public email!: string;
   public password_hash!: string;
   public is_admin!: boolean;
+  public status!: string;
   public created_at: string | undefined;
   public updated_at: string | undefined;
 
@@ -32,6 +34,11 @@ export default function (sequelize: Sequelize): typeof UserModel {
       is_admin: {
         allowNull: false,
         type: DataTypes.BOOLEAN,
+      },
+      status: {
+        allowNull: false,
+        type: DataTypes.STRING,
+        defaultValue: constants.USER_STATUS_ACTIVE,
       },
       created_at: DataTypes.DATE,
       updated_at: DataTypes.DATE,

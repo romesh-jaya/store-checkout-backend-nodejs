@@ -3,12 +3,17 @@ export {};
 const jwt = require('jsonwebtoken');
 const bcryptjs = require('bcryptjs');
 import { Request as JWTRequest } from 'express-jwt';
-const checkAuth = require('../../middleware/check-auth');
 import express from 'express';
 import { UserModel } from '../../database/models/user.model';
 import { User } from '../../models/User';
 import { logError } from '../../utils/logger';
+
 const router = express.Router();
+
+const checkAuth = require('../../middleware/check-auth');
+const checkSuper = require('../../middleware/check-super');
+import * as constants from '../../constants';
+import { Op } from 'sequelize';
 
 router.post('/signup', (req, res) => {
   const { email, password } = req.body;
@@ -28,9 +33,13 @@ router.post('/signup', (req, res) => {
 
     UserModel.create(userInput)
       .then((user) => {
-        const token = jwt.sign({ id: user.id }, process.env.HASHSECRET, {
-          expiresIn: process.env.TOKENEXPIRATION,
-        });
+        const token = jwt.sign(
+          { id: user.id, email: user.email },
+          process.env.HASHSECRET,
+          {
+            expiresIn: process.env.TOKENEXPIRATION,
+          }
+        );
         const refreshToken = jwt.sign({ id: user.id }, process.env.HASHSECRET, {
           expiresIn: process.env.REFRESHTOKENEXPIRATION,
         });
@@ -93,9 +102,13 @@ router.post('/login', (req, res) => {
         });
       }
 
-      const token = jwt.sign({ id: fetchedUser.id }, process.env.HASHSECRET, {
-        expiresIn: process.env.TOKENEXPIRATION,
-      });
+      const token = jwt.sign(
+        { id: fetchedUser.id, email: fetchedUser.email },
+        process.env.HASHSECRET,
+        {
+          expiresIn: process.env.TOKENEXPIRATION,
+        }
+      );
       const refreshToken = jwt.sign(
         { id: fetchedUser.id },
         process.env.HASHSECRET,
@@ -121,6 +134,58 @@ router.get('/me', checkAuth, (req: JWTRequest, res) => {
   res.status(200).json({
     info: req.auth,
   });
+});
+
+router.get('', checkSuper, (_, res) => {
+  UserModel.findAll()
+    .then((documents) => {
+      let retArray: { _id: number; email: string; isAdmin: boolean }[] = [];
+
+      //prevent sending passwords
+      documents.forEach((document) => {
+        if (document.email != process.env.ADMINUSER) {
+          //Don't pass the admin user to the client, as we cannot change any settings related to this
+          retArray.push({
+            _id: document.id,
+            email: document.email,
+            isAdmin: document.is_admin,
+          });
+        }
+      });
+
+      res.status(200).json(retArray);
+    })
+    .catch((error) => {
+      res.status(500).json({
+        message: 'Retrieving users failed: ' + error.message,
+      });
+    });
+});
+
+router.delete('/:id', checkSuper, (req, res) => {
+  UserModel.update(
+    { status: constants.USER_STATUS_INACTIVE },
+    {
+      where: {
+        id: req.params.id,
+        email: {
+          [Op.not]: process.env.ADMINUSER,
+        },
+      },
+    }
+  )
+    .then((result) => {
+      if (result[0] > 0) {
+        res.status(200).json({ message: 'user set to inactive!' });
+      } else {
+        res.status(404).json({ message: 'User not found' });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({
+        message: 'Deleting user failed: ' + error.message,
+      });
+    });
 });
 
 module.exports = router;
