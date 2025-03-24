@@ -130,16 +130,10 @@ router.post('/login', (req, res) => {
     });
 });
 
-router.get('/me', checkAuth, (req: JWTRequest, res) => {
-  res.status(200).json({
-    info: req.auth,
-  });
-});
-
 router.get('', checkSuper, (_, res) => {
   UserModel.findAll({
     where: {
-      status: constants.USER_STATUS_ACTIVE,
+      status: constants.STATUS_ACTIVE,
       email: {
         [Op.not]: process.env.ADMINUSER,
       },
@@ -166,7 +160,7 @@ router.get('', checkSuper, (_, res) => {
 
 router.delete('/:id', checkSuper, (req, res) => {
   UserModel.update(
-    { status: constants.USER_STATUS_INACTIVE },
+    { status: constants.STATUS_INACTIVE },
     {
       where: {
         id: req.params.id,

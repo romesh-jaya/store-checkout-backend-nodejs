@@ -1,5 +1,6 @@
 import Sequelize from 'sequelize';
 import userModel from './models/user.model';
+import productModel from './models/product.model';
 
 export const sequelize = new Sequelize.Sequelize(
   process.env.DB_CONN_STRING as string,
@@ -21,6 +22,7 @@ sequelize.authenticate();
 
 export const DB = {
   Users: userModel(sequelize),
+  Products: productModel(sequelize),
   sequelize, // connection instance (RAW queries)
   Sequelize, // library
 };

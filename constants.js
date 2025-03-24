@@ -1,4 +1,4 @@
 module.exports = Object.freeze({
-  USER_STATUS_ACTIVE: 'active',
-  USER_STATUS_INACTIVE: 'inactive',
+  STATUS_ACTIVE: 'active',
+  STATUS_INACTIVE: 'inactive',
 });

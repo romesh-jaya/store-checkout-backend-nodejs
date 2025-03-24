@@ -1,11 +1,11 @@
 import { Sequelize, DataTypes, Model } from 'sequelize';
 import * as constants from '../../constants';
 
-export class UserModel extends Model {
+export class ProductModel extends Model {
   public id!: number;
-  public email!: string;
-  public password_hash!: string;
-  public is_admin!: boolean;
+  public name!: string;
+  public prices!: number[];
+  public barcode!: string;
   public status!: string;
   public created_at: string | undefined;
   public updated_at: string | undefined;
@@ -14,26 +14,26 @@ export class UserModel extends Model {
   public readonly updatedAt!: Date;
 }
 
-export default function (sequelize: Sequelize): typeof UserModel {
-  UserModel.init(
+export default function (sequelize: Sequelize): typeof ProductModel {
+  ProductModel.init(
     {
       id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
       },
-      email: {
+      name: {
         allowNull: false,
         type: DataTypes.STRING,
         unique: true,
       },
-      password_hash: {
+      prices: {
         allowNull: false,
-        type: DataTypes.TEXT,
+        type: DataTypes.ARRAY(DataTypes.FLOAT),
       },
-      is_admin: {
-        allowNull: false,
-        type: DataTypes.BOOLEAN,
+      barcode: {
+        allowNull: true,
+        type: DataTypes.STRING,
       },
       status: {
         allowNull: false,
@@ -44,7 +44,7 @@ export default function (sequelize: Sequelize): typeof UserModel {
       updated_at: DataTypes.DATE,
     },
     {
-      tableName: 'users',
+      tableName: 'products',
       sequelize,
       createdAt: 'created_at',
       updatedAt: 'updated_at',
@@ -52,5 +52,5 @@ export default function (sequelize: Sequelize): typeof UserModel {
     }
   );
 
-  return UserModel;
+  return ProductModel;
 }
