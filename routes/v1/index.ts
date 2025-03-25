@@ -6,6 +6,7 @@ var { expressjwt: jwt } = require('express-jwt');
 const bodyParser = require('body-parser');
 
 const authRoutes = require('./auth');
+const productRoutes = require('./products');
 
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: false }));
@@ -25,5 +26,6 @@ router.use(jwtCheck, (err, _, res, next) => {
 });
 
 router.use('/auth', authRoutes);
+router.use('/products', productRoutes);
 
 module.exports = router;

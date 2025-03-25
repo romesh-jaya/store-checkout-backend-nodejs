@@ -1,24 +1,20 @@
-# Backend for Movie Store - NodeJS
+# Store Checkout Backend - NodeJS
 
 Runs a node.js server as the backend, interfacing with postgres. 
 
-## Technical details
+## Tech stack
 
-- Verifies JWT tokens passed in with the requests and also authorizes certain actions which require higher privileges.
-- Fetches latest title data from OMDB.
-- Uses mongoose-sequence plugin to create auto incrementing fields. 
-- Includes backend functionality for Stripe payments including a webhook.
-- Includes backend functionality for Paypal payments including a webhook.
-- Uses Nodemailer to send emails
+- Sequelize ORM
+- JWT creation and verification along with long-lived refresh tokens
 
 
 ## .env variables
 
 All fields mentioned in nodemon.json.example must be filled with correct values and renamed as nodemon.json. 
 
-    - MONGOENDPOINT - Mongo DB Atlas connection string
+    - DB_CONN_STRING - Postgres connection string
     - STARTPORT - Port that this server will run on. Will be overriden by PORT
-    - ADMIN_USER - email address of the user with Admin rights
+    - ADMINUSER - email address of the user with Superadmin rights
     
 
 ## Available Scripts

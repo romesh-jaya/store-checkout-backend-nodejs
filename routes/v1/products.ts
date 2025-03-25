@@ -29,18 +29,19 @@ router.post('', checkAdmin, (req, res) => {
 
   const product: Product = {
     name: name,
-    prices: [unitPrice],
+    prices: unitPrice,
     barcode: barcode,
   };
+
   ProductModel.create(product)
     .then((createdproduct) => {
-      res.status(201).json({
+      return res.status(201).json({
         message: 'product added successfully',
         productId: createdproduct.id,
       });
     })
     .catch((error) => {
-      res.status(500).json({
+      return res.status(500).json({
         message: 'Creating product failed : ' + error.message,
       });
     });

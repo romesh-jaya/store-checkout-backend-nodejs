@@ -207,6 +207,52 @@ router.patch('/:id', checkSuper, (req, res) => {
     });
 });
 
+router.post('/refresh-token', (req, res, next) => {
+  const { email, refreshToken } = req.body;
+
+  if (!email || !refreshToken) {
+    return res.status(500).json({
+      message: 'Missing body params email and refreshToken',
+    });
+  }
+
+  //note: use any error code other than 401, otherwise it will conflict with the logic in
+  //auth-interceptor in the client
+  UserModel.findOne({
+    where: {
+      email: email,
+    },
+  })
+    .then((user) => {
+      if (!user) {
+        return res.status(409).json({
+          message: "User doesn't exist in database anymore",
+        });
+      }
+      try {
+        jwt.verify(req.body.refreshToken, process.env.REFRESHSECRET);
+        next();
+      } catch (error) {
+        return res
+          .status(409)
+          .json({ message: 'Refresh token invalid. Please re-login' });
+      }
+
+      const token = jwt.sign({ id: user.id }, process.env.HASHSECRET, {
+        expiresIn: process.env.TOKENEXPIRATION,
+      });
+      res.status(200).json({
+        token: token,
+        isAdmin: user.is_admin,
+      });
+    })
+    .catch((error) => {
+      return res.status(409).json({
+        message: 'Authentication with refresh token failed: ' + error.message,
+      });
+    });
+});
+
 router.post('/change-password', checkAuth, (req, res) => {
   const { oldPassword, password } = req.body;
 

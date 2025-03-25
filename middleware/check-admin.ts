@@ -7,7 +7,7 @@ module.exports = (req: JWTRequest, res, next) => {
   }
 
   if (req.auth.email == process.env.ADMINUSER) {
-    next();
+    return next();
   }
 
   // Check if user is marked as Admin
