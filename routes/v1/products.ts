@@ -47,4 +47,82 @@ router.post('', checkAdmin, (req, res) => {
     });
 });
 
+router.get('/:name', (req, res) => {
+  const { name } = req.params;
+
+  if (!name) {
+    return res.status(500).json({
+      message: 'Missing query params name',
+    });
+  }
+
+  ProductModel.findOne({
+    where: {
+      name,
+    },
+  })
+    .then((product) => {
+      res.status(200).json({
+        product: product,
+      });
+    })
+    .catch((error) => {
+      return res.status(500).json({
+        message: 'Retrieving product failed: ' + error.message,
+      });
+    });
+});
+
+router.delete('/:id', checkAdmin, (req, res) => {
+  ProductModel.update(
+    { status: constants.STATUS_INACTIVE },
+    {
+      where: {
+        id: req.params.id,
+      },
+    }
+  )
+    .then((result) => {
+      if (result[0] > 0) {
+        res.status(200).json({ message: 'product set to inactive!' });
+      } else {
+        res.status(404).json({ message: 'product not found' });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({
+        message: 'Deleting product failed: ' + error.message,
+      });
+    });
+});
+
+router.patch('/:id', checkAdmin, (req, res) => {
+  const product: Product = {
+    name: req.body.name,
+    prices: req.body.unitPrice,
+    barcode: req.body.barcode,
+  };
+
+  ProductModel.update(
+    { product },
+    {
+      where: {
+        id: req.params.id,
+      },
+    }
+  )
+    .then((result) => {
+      if (result[0] > 0) {
+        res.status(200).json({ message: 'Update successful!' });
+      } else {
+        res.status(404).json({ message: 'product not found' });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({
+        message: 'Updating product failed: ' + error.message,
+      });
+    });
+});
+
 module.exports = router;
