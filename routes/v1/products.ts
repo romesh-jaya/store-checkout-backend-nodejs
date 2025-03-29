@@ -63,7 +63,12 @@ router.get('/:name', (req, res) => {
   })
     .then((product) => {
       res.status(200).json({
-        product: product,
+        product: {
+          name: product?.name,
+          _id: product?.id,
+          barcode: product?.barcode,
+          unitPrice: product?.prices,
+        },
       });
     })
     .catch((error) => {
@@ -104,25 +109,63 @@ router.patch('/:id', checkAdmin, (req, res) => {
   };
 
   ProductModel.update(
-    { product },
+    { ...product },
     {
       where: {
-        id: req.params.id,
+        id: +req.params.id,
       },
     }
   )
     .then((result) => {
       if (result[0] > 0) {
-        res.status(200).json({ message: 'Update successful!' });
+        return res.status(200).json({ message: 'Update successful!' });
       } else {
-        res.status(404).json({ message: 'product not found' });
+        return res.status(404).json({ message: 'product not found' });
       }
     })
     .catch((error) => {
-      res.status(500).json({
+      return res.status(500).json({
         message: 'Updating product failed: ' + error.message,
       });
     });
+});
+
+//Pass 4 query params into this method for the case of query, none for populate
+router.get('', checkAuth, (req, res) => {
+  const pageSize = +req.query.pagesize;
+  const currentPage = +req.query.currentPage;
+  const queryString = req.query.queryString;
+  const queryForNameFlag = req.query.queryForNameFlag;
+
+  if (pageSize < 1 || currentPage < 0) {
+    return res.status(500).json({
+      message:
+        'Valid pagesize, page no must be specified when querying products',
+    });
+  }
+
+  if (!queryString) {
+    ProductModel.findAndCountAll({
+      offset: pageSize * currentPage,
+      limit: pageSize,
+    })
+      .then((results) => {
+        return res.status(200).json({
+          products: results.rows.map((row) => ({
+            name: row.name,
+            _id: row.id,
+            barcode: row.barcode,
+            unitPrice: row.prices,
+          })),
+          totalCount: results.count,
+        });
+      })
+      .catch((error) => {
+        return res.status(500).json({
+          message: 'Retrieving products failed (all query) : ' + error.message,
+        });
+      });
+  }
 });
 
 module.exports = router;
