@@ -47,37 +47,6 @@ router.post('', checkAdmin, (req, res) => {
     });
 });
 
-router.get('/:name', (req, res) => {
-  const { name } = req.params;
-
-  if (!name) {
-    return res.status(500).json({
-      message: 'Missing query params name',
-    });
-  }
-
-  ProductModel.findOne({
-    where: {
-      name,
-    },
-  })
-    .then((product) => {
-      res.status(200).json({
-        product: {
-          name: product?.name,
-          _id: product?.id,
-          barcode: product?.barcode,
-          unitPrice: product?.prices,
-        },
-      });
-    })
-    .catch((error) => {
-      return res.status(500).json({
-        message: 'Retrieving product failed: ' + error.message,
-      });
-    });
-});
-
 router.delete('/:id', checkAdmin, (req, res) => {
   ProductModel.update(
     { status: constants.STATUS_INACTIVE },
@@ -131,11 +100,36 @@ router.patch('/:id', checkAdmin, (req, res) => {
 });
 
 //Pass 4 query params into this method for the case of query, none for populate
-router.get('', checkAuth, (req, res) => {
+router.get('', checkAuth, async (req, res) => {
   const pageSize = +req.query.pagesize;
   const currentPage = +req.query.currentPage;
-  const queryString = req.query.queryString;
-  const queryForNameFlag = req.query.queryForNameFlag;
+  const queryForName = req.query.queryForName;
+  const queryForBarcode = req.query.queryForBarcode;
+  const name = req.query.name;
+
+  // query by product name
+  if (name) {
+    try {
+      const product = await ProductModel.findOne({
+        where: {
+          name,
+          status: constants.STATUS_ACTIVE,
+        },
+      });
+      return res.status(200).json({
+        product: {
+          name: product?.name,
+          _id: product?.id,
+          barcode: product?.barcode,
+          unitPrice: product?.prices,
+        },
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: 'Retrieving product failed: ' + (error as any).message,
+      });
+    }
+  }
 
   if (pageSize < 1 || currentPage < 0) {
     return res.status(500).json({
@@ -144,27 +138,35 @@ router.get('', checkAuth, (req, res) => {
     });
   }
 
-  if (!queryString) {
-    ProductModel.findAndCountAll({
+  const whereClause = {
+    where: {
+      ...(queryForName && { name: { [Op.iLike]: `%${queryForName}%` } }),
+      ...(queryForBarcode && {
+        barcode: { [Op.iLike]: `%${queryForBarcode}%` },
+      }),
+      status: constants.STATUS_ACTIVE,
+    },
+  };
+
+  try {
+    const results = await ProductModel.findAndCountAll({
+      ...whereClause,
       offset: pageSize * currentPage,
       limit: pageSize,
-    })
-      .then((results) => {
-        return res.status(200).json({
-          products: results.rows.map((row) => ({
-            name: row.name,
-            _id: row.id,
-            barcode: row.barcode,
-            unitPrice: row.prices,
-          })),
-          totalCount: results.count,
-        });
-      })
-      .catch((error) => {
-        return res.status(500).json({
-          message: 'Retrieving products failed (all query) : ' + error.message,
-        });
-      });
+    });
+    return res.status(200).json({
+      products: results.rows.map((row) => ({
+        name: row.name,
+        _id: row.id,
+        barcode: row.barcode,
+        unitPrice: row.prices,
+      })),
+      totalCount: results.count,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Retrieving product failed: ' + (error as any).message,
+    });
   }
 });
 
