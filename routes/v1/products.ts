@@ -41,6 +41,17 @@ router.post('', checkAdmin, (req, res) => {
       });
     })
     .catch((error) => {
+      if (error.name && error.name == 'SequelizeUniqueConstraintError') {
+        if (error.errors && error.errors.length > 0) {
+          const firstError = error.errors[0];
+          if (firstError.path && firstError.path == 'name') {
+            return res.status(500).json({
+              message: 'Product Name already exists',
+            });
+          }
+        }
+      }
+
       return res.status(500).json({
         message: 'Creating product failed : ' + error.message,
       });
@@ -105,6 +116,7 @@ router.get('', checkAuth, async (req, res) => {
   const currentPage = +req.query.currentPage;
   const queryForName = req.query.queryForName;
   const queryForBarcode = req.query.queryForBarcode;
+  const showInactiveProducts = req.query.showInactiveProducts;
   const name = req.query.name;
 
   // query by product name
@@ -113,7 +125,7 @@ router.get('', checkAuth, async (req, res) => {
       const product = await ProductModel.findOne({
         where: {
           name,
-          status: constants.STATUS_ACTIVE,
+          ...(!showInactiveProducts && { status: constants.STATUS_ACTIVE }),
         },
       });
       return res.status(200).json({
@@ -144,7 +156,7 @@ router.get('', checkAuth, async (req, res) => {
       ...(queryForBarcode && {
         barcode: { [Op.iLike]: `%${queryForBarcode}%` },
       }),
-      status: constants.STATUS_ACTIVE,
+      ...(!showInactiveProducts && { status: constants.STATUS_ACTIVE }),
     },
   };
 
